@@ -7,7 +7,7 @@ from flask import Flask, request, render_template, redirect, url_for, session, a
 from werkzeug.middleware.proxy_fix import ProxyFix
 import hmac
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
 # Render sits behind a trusted reverse proxy; use its forwarded client IP.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.secret_key = os.environ.get("APP_SECRET", "change-this-secret")
@@ -149,10 +149,10 @@ def admin():
     suspicious = con.execute("""SELECT * FROM request_logs
                                WHERE suspicious=1
                                ORDER BY id DESC LIMIT 100""").fetchall()
-    con.close()
     total = con.execute("SELECT COUNT(*) c FROM request_logs").fetchone()["c"]
     bad = con.execute("SELECT COUNT(*) c FROM request_logs WHERE suspicious=1").fetchone()["c"]
     unique = con.execute("SELECT COUNT(DISTINCT ip) c FROM request_logs").fetchone()["c"]
+    con.close()
     return render_template("admin.html", recent=recent, counts=counts, suspicious=suspicious, total=total, bad=bad, unique=unique)
 
 @app.route("/admin/api/summary")
